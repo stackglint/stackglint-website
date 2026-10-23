@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* ---------- design tokens ---------- */
+@theme {
+  --color-bg: #060706;
+  --color-surface: #0c100a;
+  --color-surface-2: #11170e;
+  --color-line: #1d2617;
+  --color-fg: #eef2e6;
+  --color-muted: #98a38a;
+  --color-accent: #d4f53c;
+  --color-ink: #0a0c06;
+  --color-ok: #7be495;
+  --color-lilac: #c9a3ff;
+  --color-gold: #f5d63c;
+  --color-sky: #6fd3e8;
+
+  --font-display: "Outfit Variable", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Manrope Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-pulse-ring: pulse-ring 2s infinite;
+  --animate-spin-fast: spin 0.9s linear infinite;
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgb(123 228 149 / 0.6); }
+    70%, 100% { box-shadow: 0 0 0 9px rgb(123 228 149 / 0); }
+  }
+}
+
+/* ---------- base ---------- */
+@layer base {
+  html { scroll-behavior: smooth; color-scheme: dark; }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1, h2, h3 { @apply font-display; text-wrap: balance; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-accent rounded-lg; }
+  ::selection { @apply bg-accent text-ink; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* ---------- utilities ---------- */
+@utility container-x {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+@utility grid-bg {
+  background-image: linear-gradient(var(--color-line) 1px, transparent 1px), linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* cursor spotlight on any .spot card */
+.spot { --mx: -300px; --my: -300px; position: relative; }
+.spot::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity .25s;
+  background: radial-gradient(220px circle at var(--mx) var(--my), color-mix(in srgb, var(--spot, var(--color-accent)) 16%, transparent), transparent 70%);
+}
+.spot:hover::after { opacity: 1; }
+
+/* 3D service stack */
+.scene { --pw: clamp(220px, 26vw, 320px); --gap: clamp(40px, 4.6vw, 62px); perspective: 1600px; }
+@media (max-width: 900px) { .scene { --pw: clamp(170px, 42vw, 290px); --gap: clamp(34px, 7vw, 54px); } }
+.iso { transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-42deg); }
+.plate {
+  width: var(--pw); height: var(--pw); left: calc(var(--pw) / -2); top: calc(var(--pw) / -2);
+  transform: translateZ(calc(var(--i) * var(--gap)));
+  background:
+    linear-gradient(color-mix(in srgb, var(--color-accent) 7%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 7%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
+    color-mix(in srgb, var(--color-surface) 88%, transparent);
+  transition: transform .5s cubic-bezier(.2,.8,.2,1), background-color .3s, border-color .3s, box-shadow .3s;
+}
+.plate[data-on="true"] {
+  transform: translateZ(calc(var(--i) * var(--gap) + 46px));
+  background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  box-shadow: 0 0 60px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+/* idea -> product morph blocks */
+.morph-b {
+  position: absolute; display: block; border: 1.5px solid transparent;
+  transition: left .95s cubic-bezier(.65,0,.25,1), top .95s cubic-bezier(.65,0,.25,1), width .95s cubic-bezier(.65,0,.25,1),
+    height .95s cubic-bezier(.65,0,.25,1), border-radius .95s, background-color .7s, border-color .7s, transform .95s cubic-bezier(.65,0,.25,1), box-shadow .7s;
+}
+.morph-grid {
+  background:
+    linear-gradient(color-mix(in srgb, var(--color-accent) 5%, transparent) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 5%, transparent) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--color-bg);
+}
