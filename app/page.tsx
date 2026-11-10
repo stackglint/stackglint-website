@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import IdeaSection from "@/components/IdeaSection";
 import StackLayers from "@/components/StackLayers";
+import Work from "@/components/Work";
 import { Contact, Elements, Footer, How, Marquee, Pipeline, Spotlight, Trust } from "@/components/Sections";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
         <Hero />
         <Marquee />
         <Trust />
+        <Work />
         <StackLayers />
         <IdeaSection />
         <Elements />

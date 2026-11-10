@@ -31,6 +31,7 @@ components/
   Globe.tsx        draggable canvas globe with orbiting service icons
   StackLayers.tsx  3D service stack with tabs
   IdeaSection.tsx  idea -> product animation and project planner
+  Work.tsx         project showcase with filters (data in lib/content.ts → PROJECTS)
   Sections.tsx     trust band, elements table, pipeline, how we work, contact, footer
   ui.tsx           logo, icons, buttons, chips, section headings
 lib/
@@ -43,7 +44,8 @@ public/            favicon, Apple touch icon, social share image
 
 ## Edit content
 
-All text (services, stages, tech, planner options) lives in `lib/content.ts`.
+All text (services, stages, tech, planner options, projects) lives in `lib/content.ts`.
+Project screenshots live in `public/work/` (1200×750 WebP). To add a project, add an image there and an entry to `PROJECTS`.
 The contact email lives in `lib/site.ts`.
 
 ## Deploy

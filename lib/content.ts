@@ -84,6 +84,35 @@ export const PRINCIPLES: [string, string][] = [
 ];
 
 export const NAV = [
-  { href: "#stack", label: "Stack" }, { href: "#idea", label: "Your idea" }, { href: "#elements", label: "Elements" },
+  { href: "#work", label: "Work" }, { href: "#stack", label: "Stack" }, { href: "#idea", label: "Your idea" }, { href: "#elements", label: "Elements" },
   { href: "#lifecycle", label: "Life cycle" }, { href: "#how", label: "How we work" },
+];
+
+// Projects shown in the "Work" section. All are demo builds with sample data.
+export type ProjectKind = "web" | "site" | "odoo";
+export type Project = {
+  slug: string; name: string; kind: ProjectKind; type: string; text: string;
+  points: string[]; tech: string[]; image: string; live?: string;
+};
+export const PROJECTS: Project[] = [
+  { slug: "odoo-rental", name: "Equipment Rental for Odoo", kind: "odoo", type: "Odoo 19 module",
+    text: "Rent out equipment by the hour, day or week, with every unit on one availability board.",
+    points: ["Availability board with pickups, returns and late tiles", "Auto-pricing from hourly, daily and weekly rates", "Deposits, late fees, damage and invoices", "Double bookings blocked by PostgreSQL"],
+    tech: ["Odoo", "Python", "PostgreSQL", "JavaScript"], image: "work/odoo-rental.webp" },
+  { slug: "staylight", name: "Staylight", kind: "web", type: "Villa & hotel direct booking",
+    text: "A booking website and owner dashboard for small hotels, so guests book direct without commission.",
+    points: ["Price calendar for every night, with seasons", "Extras, deposit and instant confirmation", "Tape chart, check-in and rates for the owner", "No double bookings, enforced by the database"],
+    tech: ["Next.js", "TypeScript", "PostgreSQL"], image: "work/staylight.webp" },
+  { slug: "threadfront", name: "Threadfront", kind: "web", type: "Online store for clothing brands",
+    text: "A complete fashion store: storefront, checkout and a store admin, re-branded per client.",
+    points: ["Colours and sizes with live stock", "Discount codes and checkout", "Orders, stock and customers in the admin", "Stock checked in the database, so no overselling"],
+    tech: ["Next.js", "TypeScript", "PostgreSQL"], image: "work/threadfront.webp" },
+  { slug: "tillo", name: "Tillo", kind: "web", type: "Stock & billing app",
+    text: "A point-of-sale and inventory app with stock forecasts, reorder lists, receipts and insights.",
+    points: ["Fast checkout with search and categories", "Stock forecasts and reorder lists", "Receipts and sales insights"],
+    tech: ["Next.js", "React", "TypeScript"], image: "work/tillo.webp", live: "https://stackglint.github.io/tillo-demo/" },
+  { slug: "layover", name: "Layover", kind: "site", type: "Café website",
+    text: "A café website with online ordering and a departure-board style menu.",
+    points: ["Order ahead and collect", "Animated design that works on any screen", "Fast static hosting"],
+    tech: ["Next.js", "React", "TypeScript"], image: "work/layover.webp", live: "https://stackglint.github.io/layover-demo/" },
 ];
