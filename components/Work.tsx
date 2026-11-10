@@ -1,91 +1,120 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
-import { PROJECTS, type ProjectKind } from "@/lib/content";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { PROJECTS } from "@/lib/content";
 import { BASE_PATH } from "@/lib/site";
-import { SectionHead, TechChip, WindowDots } from "./ui";
-
-const FILTERS: { key: "all" | ProjectKind; label: string }[] = [
-  { key: "all", label: "All" }, { key: "web", label: "Web apps" }, { key: "site", label: "Websites" }, { key: "odoo", label: "Odoo ERP" },
-];
+import { SectionHead, TechChip } from "./ui";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
+/** Compact project slider: swipe on phones, arrows or drag on desktop. */
 export default function Work() {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
-  const shown = PROJECTS.filter(p => filter === "all" || p.kind === filter);
+  const track = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState({ start: true, end: false, progress: 0 });
+
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setEdge({ start: el.scrollLeft < 8, end: el.scrollLeft > max - 8, progress: max > 0 ? el.scrollLeft / max : 1 });
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    addEventListener("resize", update);
+    return () => { el.removeEventListener("scroll", update); removeEventListener("resize", update); };
+  }, []);
+
+  // Drag to scroll with a mouse (touch already swipes natively).
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    let down = false, startX = 0, startLeft = 0, moved = false;
+    const onDown = (e: PointerEvent) => { if (e.pointerType !== "mouse") return; down = true; moved = false; startX = e.clientX; startLeft = el.scrollLeft; };
+    const onMove = (e: PointerEvent) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 5) { moved = true; el.style.scrollSnapType = "none"; el.scrollLeft = startLeft - dx; }
+    };
+    const onUp = () => { if (!down) return; down = false; el.style.scrollSnapType = ""; };
+    const onClick = (e: MouseEvent) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } };
+    el.addEventListener("pointerdown", onDown);
+    addEventListener("pointermove", onMove);
+    addEventListener("pointerup", onUp);
+    el.addEventListener("click", onClick, true);
+    return () => { el.removeEventListener("pointerdown", onDown); removeEventListener("pointermove", onMove); removeEventListener("pointerup", onUp); el.removeEventListener("click", onClick, true); };
+  }, []);
+
+  const slide = (dir: 1 | -1) => {
+    const el = track.current;
+    if (!el) return;
+    const card = el.querySelector("article");
+    const step = card ? card.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
+
+  const arrow = "grid size-12 place-items-center rounded-full border-[1.5px] border-line text-fg transition hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-30";
 
   return (
     <section id="work" className="scroll-mt-20 border-t border-line py-[clamp(56px,6.5vw,96px)]">
       <div className="container-x">
-        <SectionHead cmd="ls ./work"
-          title={<>Things we&apos;ve <span className="text-accent">built</span>.</>}
-          lead="Demo projects we built end to end, with sample data, to show how we work. Two are live, so you can click around yourself." />
-
-        <div role="tablist" aria-label="Filter projects" className="mb-7 flex flex-wrap gap-2">
-          {FILTERS.map(f => {
-            const count = f.key === "all" ? PROJECTS.length : PROJECTS.filter(p => p.kind === f.key).length;
-            const on = filter === f.key;
-            return (
-              <button key={f.key} role="tab" aria-selected={on} onClick={() => setFilter(f.key)}
-                className={`inline-flex min-h-[42px] items-center gap-2 rounded-full border-[1.5px] px-4 font-mono text-[0.86rem] transition ${on ? "border-accent bg-accent text-ink" : "border-line text-muted hover:border-accent hover:text-fg"}`}>
-                {f.label}<span className={`text-[0.75rem] ${on ? "text-ink/70" : "text-muted/70"}`}>{count}</span>
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <SectionHead small cmd="ls ./work"
+            title={<>Things we&apos;ve <span className="text-accent">built</span>.</>}
+            lead="Demo projects with sample data, built end to end. Two are live, so you can click around yourself." />
+          <div className="mb-6 hidden gap-2.5 sm:flex md:mb-8">
+            <button className={arrow} onClick={() => slide(-1)} disabled={edge.start} aria-label="Previous project">
+              <svg viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.4]"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button className={arrow} onClick={() => slide(1)} disabled={edge.end} aria-label="Next project">
+              <svg viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.4]"><path d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
         </div>
+      </div>
 
-        <motion.div layout className="grid gap-5 min-[901px]:grid-cols-2">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {shown.map((p, i) => (
-              <motion.article key={p.slug} layout
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
-                exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.5, ease, delay: (i % 2) * 0.08 }}
-                className={`spot group flex flex-col overflow-hidden rounded-[22px] border border-line bg-surface ${i === 0 && filter === "all" ? "min-[901px]:col-span-2 min-[901px]:grid min-[901px]:grid-cols-[1.35fr_1fr]" : ""}`}>
-                <div className="relative flex flex-col border-b border-line bg-surface-2 min-[901px]:border-b-0">
-                  <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
-                    <WindowDots />
-                    <span className="truncate font-mono text-[0.75rem] text-muted">{p.live ? p.live.replace("https://", "") : `${p.slug} · demo`}</span>
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <img src={`${BASE_PATH}/${p.image}`} alt={`${p.name}: ${p.type}`} width={1200} height={750} loading="lazy"
-                      className="block aspect-[16/10] h-full w-full object-cover object-left-top transition duration-700 group-hover:scale-[1.03]" />
-                  </div>
-                </div>
+      {/* The track bleeds to the screen edge but starts aligned with the page content. */}
+      <div ref={track} aria-label="Projects" tabIndex={0}
+        className="flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden
+                   px-[max(20px,calc((100vw-1240px)/2+20px))] scroll-px-[max(20px,calc((100vw-1240px)/2+20px))]">
+        {PROJECTS.map((p, i) => (
+          <motion.article key={p.slug}
+            initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.55, ease, delay: Math.min(i, 3) * 0.08 }}
+            className="spot group flex w-[min(82vw,360px)] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-line bg-surface">
+            <div className="relative overflow-hidden border-b border-line bg-surface-2">
+              <img src={`${BASE_PATH}/${p.image}`} alt={`${p.name}: ${p.type}`} width={1200} height={750} loading="lazy" draggable={false}
+                className="block aspect-[16/10] w-full select-none object-cover object-left-top transition duration-700 group-hover:scale-[1.04]" />
+              <span className="absolute left-3 top-3 rounded-full bg-bg/80 px-2.5 py-1 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-accent backdrop-blur">
+                {p.live ? "● Live demo" : "Demo"}
+              </span>
+            </div>
+            <div className="flex flex-1 flex-col gap-3 p-5">
+              <div>
+                <div className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-muted">{p.type}</div>
+                <h3 className="mt-1 font-display text-[1.45rem] font-extrabold leading-tight tracking-[-0.02em]">{p.name}</h3>
+                <p className="mt-1.5 text-[0.95rem] leading-relaxed text-muted">{p.text}</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5 [&>span]:scale-[0.92] [&>span]:origin-left">{p.tech.slice(0, 3).map(t => <TechChip key={t} name={t} />)}</div>
+              <div className="mt-auto pt-1">
+                {p.live ? (
+                  <a href={p.live} target="_blank" rel="noopener noreferrer" draggable={false}
+                    className="inline-flex items-center gap-1.5 font-bold text-accent hover:underline">Open live demo <span aria-hidden="true">↗</span></a>
+                ) : (
+                  <a href="#contact" draggable={false} className="inline-flex items-center gap-1.5 font-bold text-fg hover:text-accent">Ask for a walkthrough <span aria-hidden="true">→</span></a>
+                )}
+              </div>
+            </div>
+          </motion.article>
+        ))}
+        <div aria-hidden="true" className="w-px shrink-0" />
+      </div>
 
-                <div className="flex flex-1 flex-col gap-4 p-[22px] sm:p-7">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[0.78rem] uppercase tracking-[0.12em] text-accent">{p.type}</span>
-                    <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted">Demo</span>
-                  </div>
-                  <div>
-                    <h3 className="font-display text-[clamp(1.5rem,1.2rem+1vw,2rem)] font-extrabold leading-tight tracking-[-0.02em]">{p.name}</h3>
-                    <p className="mt-2 text-muted">{p.text}</p>
-                  </div>
-                  <ul className="grid gap-2 text-[0.95rem]">
-                    {p.points.map(pt => (
-                      <li key={pt} className="flex gap-2.5"><span aria-hidden="true" className="mt-[9px] size-1.5 shrink-0 rounded-full bg-accent" />{pt}</li>
-                    ))}
-                  </ul>
-                  <div className="flex flex-wrap gap-2">{p.tech.map(t => <TechChip key={t} name={t} />)}</div>
-                  <div className="mt-auto flex flex-wrap gap-3 pt-2">
-                    {p.live ? (
-                      <a href={p.live} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex min-h-[46px] items-center gap-2 rounded-full border-[1.5px] border-accent bg-accent px-5 text-[0.95rem] font-bold text-ink transition hover:-translate-y-0.5">
-                        Open live demo <span aria-hidden="true">↗</span>
-                      </a>
-                    ) : null}
-                    <a href="#contact"
-                      className="inline-flex min-h-[46px] items-center gap-2 rounded-full border-[1.5px] border-line px-5 text-[0.95rem] font-bold transition hover:border-accent hover:text-accent">
-                      {p.live ? "Want one like this?" : "Ask for a walkthrough"}
-                    </a>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+      <div className="container-x mt-5">
+        <div className="h-[3px] overflow-hidden rounded-full bg-line" aria-hidden="true">
+          <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: `${Math.max(12, edge.progress * 100)}%` }} />
+        </div>
       </div>
     </section>
   );
